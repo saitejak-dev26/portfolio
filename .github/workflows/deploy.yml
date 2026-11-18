@@ -40,6 +40,7 @@ jobs:
           # Folder on Hostinger that your domain points to.
           # If your FTP account already opens inside public_html, change this to ./
           server-dir: ./public_html/
+          dangerous-clean-slate: true
           exclude: |
             **/.git*
             **/.git*/**
