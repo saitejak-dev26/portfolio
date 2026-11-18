@@ -13,7 +13,7 @@ export const site = {
   linkedin: 'https://www.linkedin.com/in/saiteja-kondakindi-4475953ab/',
   resume: '/resume/Saiteja_Kondakindi_Resume.pdf',
   // Change this to your real domain once it is connected on Hostinger.
-  url: 'https://www.example.com',
+  url: 'https://saitejak.dev',
   description:
     'Full Stack Developer with 5+ years building SaaS and CRM platforms with Next.js, React, Vite, Node.js, NestJS and MySQL.',
   typedRoles: ['Full Stack Developer', 'Next.js & NestJS', 'SaaS & CRM Builder'],
