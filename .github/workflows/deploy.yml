@@ -3,11 +3,10 @@ name: Build & deploy to Hostinger
 on:
   push:
     branches: [main]
-  workflow_dispatch: # lets you re-run a deploy from the Actions tab
+  workflow_dispatch:
 
-concurrency:
-  group: hostinger-deploy
-  cancel-in-progress: true
+permissions:
+  contents: write
 
 jobs:
   deploy:
@@ -27,20 +26,19 @@ jobs:
 
       - name: Build static site
         run: npm run build
+        env:
+          NEXT_PUBLIC_WEB3FORMS_KEY: ${{ secrets.WEB3FORMS_KEY }}
 
-      - name: Upload to Hostinger via FTP
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+      - name: Publish build to the deploy branch
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          protocol: ftp
-          port: 21
-          local-dir: ./out/
-          # Folder on Hostinger that your domain points to.
-          # If your FTP account already opens inside public_html, change this to ./
-          server-dir: ./public_html/
-          dangerous-clean-slate: true
-          exclude: |
-            **/.git*
-            **/.git*/**
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+          publish_branch: deploy
+          force_orphan: true
+
+      - name: Tell Hostinger to pull the new version
+        if: ${{ env.HOSTINGER_WEBHOOK_URL != '' }}
+        env:
+          HOSTINGER_WEBHOOK_URL: ${{ secrets.HOSTINGER_WEBHOOK_URL }}
+        run: curl -fsS -X POST "$HOSTINGER_WEBHOOK_URL"
