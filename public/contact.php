@@ -10,7 +10,7 @@
 
 // ── Configuration ───────────────────────────────────────────
 const TO_EMAIL   = 'careers.saitejak@gmail.com';
-const FROM_EMAIL = 'no-reply@yourdomain.com';   // ← change to a mailbox on your Hostinger domain
+const FROM_EMAIL = 'no-reply@saitejak.dev';   // ← change to a mailbox on your Hostinger domain
 const FROM_NAME  = 'Portfolio Contact Form';
 const MIN_SECONDS_BETWEEN_SENDS = 30;           // simple per-visitor rate limit
 
