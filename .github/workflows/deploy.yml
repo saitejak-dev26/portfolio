@@ -39,7 +39,7 @@ jobs:
           local-dir: ./out/
           # Folder on Hostinger that your domain points to.
           # If your FTP account already opens inside public_html, change this to ./
-          server-dir: ./domains/saitejak.dev/public_html/
+          server-dir: ./public_html/domains/saitejak.dev/public_html/
           # Remove files on the server that no longer exist in the build
           dangerous-clean-slate: true
           exclude: |
