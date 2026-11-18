@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { Project } from '@/data/site';
 import type { Tag as TagT } from '@/lib/icons';
 import SectionTitle from './SectionTitle';
@@ -33,6 +33,24 @@ export default function Projects({ projects }: { projects: ProjectView[] }) {
   const pad = (x: number) => String(x).padStart(2, '0');
   const prev = () => setIndex(off === 0 ? n - 1 : off - 1);
   const next = () => setIndex(off >= n - 1 ? 0 : off + 1);
+
+  // Horizontal swipe on touch screens; ignores mostly-vertical gestures so page scroll still works.
+  const touch = useRef<{ x: number; y: number } | null>(null);
+  const onTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touch.current = { x: t.clientX, y: t.clientY };
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    const start = touch.current;
+    touch.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+    if (dx < 0) next();
+    else prev();
+  };
 
   return (
     <section id="projects" className="section projects">
@@ -79,7 +97,11 @@ export default function Projects({ projects }: { projects: ProjectView[] }) {
           </div>
         </div>
 
-        <div className="track" style={{ transform: `translateX(calc(-${off} * (min(380px, 82vw) + 20px)))` }}>
+        <div
+          className="track"
+          onTouchStart={onTouchStart}
+          onTouchEnd={onTouchEnd}
+          style={{ transform: `translateX(calc(-${off} * (min(380px, 82vw) + var(--track-gap))))` }}>
           {list.map((p) => (
             <article key={p.title} className={p.inDevelopment ? 'pcard dev' : 'pcard'}>
               <div className="pstage" style={{ background: p.bg }}>

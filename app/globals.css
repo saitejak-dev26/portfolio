@@ -114,10 +114,25 @@ button, input, select, textarea { font: inherit; }
 .logo { position: absolute; left: 12px; top: -6px; }
 .logo svg { display: block; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35)); transition: transform 0.6s var(--ease); }
 .logo:hover svg { transform: rotate(-8deg) scale(1.05); }
-@media (max-width: 720px) {
-  .nav-bar { padding-left: 76px; }
+.nav-toggle {
+  display: none; align-items: center; justify-content: center; width: 44px; height: 44px; padding: 0;
+  border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.08); color: #fff; cursor: pointer;
+  transition: background-color 0.25s;
+}
+.nav-toggle:hover { background: rgba(255, 255, 255, 0.16); }
+@media (max-width: 860px) {
+  .nav { top: 10px; padding: 0 12px; }
+  .nav-bar { padding: 8px 8px 8px 76px; }
+  .logo { left: 8px; top: -4px; }
   .logo svg { width: 60px; height: 60px; }
-  .nav-links a { padding: 10px 9px; font-size: 14px; }
+  .nav-cta { margin-left: auto; }
+  .nav-toggle { display: flex; }
+  .nav-links { display: none; order: 3; flex-basis: calc(100% + 68px); flex-direction: column; gap: 2px; padding: 8px 0 4px; margin-left: -68px; }
+  .nav-bar.open .nav-links { display: flex; }
+  .nav-links a { padding: 12px 14px; font-size: 16px; }
+}
+@media (max-width: 380px) {
+  .nav-cta { padding: 12px 14px; font-size: 13px; }
 }
 
 /* ─────────────────────────────────────────────────────────────
@@ -260,7 +275,7 @@ button, input, select, textarea { font: inherit; }
   transition: background-color 0.25s, color 0.25s, transform 0.3s var(--ease);
 }
 .arw:hover { background: var(--ink); color: #fff; transform: scale(1.06); }
-.track { display: flex; gap: 20px; transition: transform 0.8s var(--ease); }
+.track { --track-gap: 20px; display: flex; gap: var(--track-gap); transition: transform 0.8s var(--ease); }
 .pcard {
   flex: none; width: min(380px, 82vw); border-radius: 24px; border: 1px solid var(--line); background: #fff;
   overflow: hidden; display: flex; flex-direction: column;
@@ -385,3 +400,79 @@ textarea.fin { line-height: 1.6; resize: vertical; }
 .footer { max-width: 1180px; margin: 0 auto; padding: 24px 24px 32px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; color: var(--muted); }
 .footer span { display: flex; align-items: center; gap: 10px; }
 .footer a { padding: 12px 0; }
+
+/* ─────────────────────────────────────────────────────────────
+   Responsive
+   ───────────────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+  .about { padding: 88px 20px 80px; }
+  .skills-pad, .exp-pad { padding: 80px 20px; }
+  .projects { padding: 88px 0 80px; }
+  .stitle { margin-bottom: 40px; }
+  .hero-side { flex: 1 1 100%; flex-wrap: wrap; justify-content: flex-start; gap: 20px 32px; }
+  .scroll { display: none; }
+}
+
+@media (max-width: 600px) {
+  .container { padding: 0 16px; }
+  .hero-wrap, .contact-wrap { padding: 8px; }
+  .hero, .contact { border-radius: 22px; }
+  .hero { min-height: auto; }
+  .hero-content { gap: 28px; padding: 112px 20px 28px; }
+  .hero-main { gap: 16px; }
+  .hero-glow { width: 380px; height: 380px; right: -140px; top: -120px; filter: blur(90px); }
+  .hero-mono { top: 84px; right: 12px; font-size: 38vw; }
+  .hero h1 { font-size: clamp(34px, 11vw, 52px); }
+  .hero-lead { font-size: 16px; }
+  .typed { font-size: 12px; letter-spacing: 0.16em; }
+  .stat b { font-size: 32px; }
+  .btn-row { width: 100%; }
+  .btn-row .btn { flex: 1 1 auto; }
+
+  .about { padding: 72px 16px 64px; }
+  .about-grid { gap: 24px; }
+  .about-body { font-size: 16px; line-height: 1.75; }
+  .skills-pad, .exp-pad { padding: 64px 16px; }
+  .projects { padding: 72px 0 64px; }
+  .stitle { margin-bottom: 32px; }
+  .stitle .ghost { font-size: clamp(44px, 15vw, 72px); }
+
+  .skill-card { padding: 20px; gap: 16px; }
+  .skill-items { gap: 8px; }
+  .skill { padding: 8px 10px; gap: 8px; font-size: 14px; }
+  .skill .tile { width: 30px; height: 30px; border-radius: 8px; }
+
+  .ptabs { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; margin: 0 -16px 24px; padding: 0 16px 4px; scrollbar-width: none; }
+  .ptabs::-webkit-scrollbar { display: none; }
+  .ptab { flex: none; }
+  .pcontrols { gap: 12px; margin-bottom: 20px; }
+  .progress { order: 3; flex-basis: 100%; max-width: none; }
+  .arw { width: 46px; height: 46px; }
+  .track { --track-gap: 14px; }
+  .pstage { height: 200px; }
+  .pbody { padding: 20px; }
+
+  .exp { gap: 24px; }
+  .exp-mark { width: 48px; height: 48px; border-radius: 14px; font-size: 18px; }
+  .exp-when { align-items: flex-start; text-align: left; }
+  .kpis { grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+  .kpi { padding: 16px; }
+  .kpi b { font-size: 26px; }
+  .exp ul { font-size: 15px; }
+  .subproject { padding: 18px; }
+
+  .contact-inner { gap: 36px; padding: 56px 16px 40px; }
+  .contact-copy p { font-size: 16px; }
+  .form { padding: 20px; border-radius: 18px; }
+  .footer { padding: 16px 16px 24px; }
+}
+
+@media (max-width: 380px) {
+  .skill-items { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* Disable hover lift on touch devices so tapped cards don't stay "stuck" raised. */
+@media (hover: none) {
+  .card:hover, .pcard:hover, .btn:hover, .nav-cta:hover, .sbtn:hover { transform: none; }
+  .pcard:hover .pstage img { transform: none; }
+}
