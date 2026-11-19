@@ -17,6 +17,25 @@ const FILTERS: Filter[] = [
   { label: 'In development', color: '#F59E0B', test: (p) => !!p.inDevelopment },
 ];
 
+const pad = (x: number) => String(x).padStart(2, '0');
+
+function Arrow({ dir }: { dir: 'prev' | 'next' }) {
+  return (
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d={dir === 'prev' ? 'M19 12H5M11 6l-6 6 6 6' : 'M5 12h14M13 6l6 6-6 6'} />
+    </svg>
+  );
+}
+
+function Shot({ p, className }: { p: ProjectView; className: string }) {
+  return (
+    <div className={className} style={{ background: p.bg }}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={p.image} alt={p.imageAlt} loading="lazy" className={p.imageFit === 'logo' ? 'logo-fit' : 'cover'} />
+    </div>
+  );
+}
+
 export default function Projects({ projects }: { projects: ProjectView[] }) {
   const [filter, setFilter] = useState('All');
   const [index, setIndex] = useState(0);
@@ -30,7 +49,6 @@ export default function Projects({ projects }: { projects: ProjectView[] }) {
   const n = list.length;
   const off = Math.max(0, Math.min(index, n - 1));
 
-  const pad = (x: number) => String(x).padStart(2, '0');
   const prev = () => setIndex(off === 0 ? n - 1 : off - 1);
   const next = () => setIndex(off >= n - 1 ? 0 : off + 1);
 
@@ -75,72 +93,115 @@ export default function Projects({ projects }: { projects: ProjectView[] }) {
             </button>
           ))}
         </div>
+      </div>
 
-        <div className="pcontrols reveal">
+      <div className="pband reveal">
+        <button type="button" className="arw arw-prev" aria-label="Previous project" onClick={prev}>
+          <Arrow dir="prev" />
+        </button>
+        <button type="button" className="arw arw-next" aria-label="Next project" onClick={next}>
+          <Arrow dir="next" />
+        </button>
+
+        <div className="pviewport" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+          <div className="track" style={{ transform: `translateX(calc(-${off} * (var(--pw) + var(--track-gap))))` }}>
+            {list.map((p, i) => {
+              const isActive = i === off;
+              const num = pad(i + 1);
+              return (
+                <article key={p.title} className={isActive ? 'pslide active' : 'pslide'} aria-current={isActive || undefined}>
+                  {/* Expanded detail card — shown for the active project */}
+                  <div className={p.inDevelopment ? 'pdetail dev' : 'pdetail'} inert={!isActive} aria-hidden={!isActive}>
+                    <div className="pd-head">
+                      <Shot p={p} className="pd-thumb" />
+                      <div className="pd-meta">
+                        <span>Category:</span>
+                        <b>{p.category}</b>
+                      </div>
+                      <span className={p.inDevelopment ? 'pd-status building' : 'pd-status'}>
+                        <span className="devdot" />
+                        {p.inDevelopment ? 'In development' : 'Live'}
+                      </span>
+                    </div>
+                    <div className="pd-row">
+                      <span>Type :</span>
+                      <b>{p.kind}</b>
+                    </div>
+                    <div className="pd-grid">
+                      <div>
+                        <span>Project</span>
+                        <b className="orb">
+                          {num}/{pad(n)}
+                        </b>
+                      </div>
+                      <div>
+                        <span>Stack</span>
+                        <b className="orb">{p.stack.length}</b>
+                      </div>
+                      <div className="wide">
+                        <span>Built with</span>
+                        <div className="tags">
+                          {p.tags.map((t) => (
+                            <Tag key={t.name} tag={t} />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="pd-bottom">
+                      <div className="pd-copy">
+                        <h3 className="orb">{p.title}</h3>
+                        <p>{p.desc}</p>
+                        {p.inDevelopment ? (
+                          <span className="plink gtext">Launching soon</span>
+                        ) : p.live ? (
+                          <a href={p.live} target="_blank" rel="noopener" className="plink">
+                            Visit live ↗
+                          </a>
+                        ) : null}
+                      </div>
+                      <Shot p={p} className="pd-peek" />
+                    </div>
+                  </div>
+
+                  {/* Poster — shown for the projects waiting in line */}
+                  <button
+                    type="button"
+                    className="pposter"
+                    inert={isActive}
+                    aria-hidden={isActive}
+                    aria-label={`Show ${p.title}`}
+                    onClick={() => setIndex(i)}
+                  >
+                    {p.inDevelopment && (
+                      <span className="pp-flag" title="In development">
+                        <span className="devdot" />
+                      </span>
+                    )}
+                    <span className="pp-num orb" aria-hidden="true">
+                      {num}
+                    </span>
+                    <Shot p={p} className="pp-shot" />
+                    <span className="pp-foot">
+                      <span className="pp-kind">
+                        <span>{num}</span>
+                        {p.kind}
+                      </span>
+                      <span className="pp-title orb">{p.title}</span>
+                    </span>
+                  </button>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="pcontrols">
           <span className="counter orb" aria-live="polite">
             {pad(off + 1)} / {pad(n)}
           </span>
           <div className="progress">
-            <span className="gbg" style={{ width: `${((off + 1) / Math.max(n, 1)) * 100}%` }} />
+            <span style={{ width: `${((off + 1) / Math.max(n, 1)) * 100}%` }} />
           </div>
-          <div className="arrows">
-            <button type="button" className="arw" aria-label="Previous project" onClick={prev}>
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 12H5M11 6l-6 6 6 6" />
-              </svg>
-            </button>
-            <button type="button" className="arw" aria-label="Next project" onClick={next}>
-              <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M13 6l6 6-6 6" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div
-          className="track"
-          onTouchStart={onTouchStart}
-          onTouchEnd={onTouchEnd}
-          style={{ transform: `translateX(calc(-${off} * (min(380px, 82vw) + var(--track-gap))))` }}>
-          {list.map((p) => (
-            <article key={p.title} className={p.inDevelopment ? 'pcard dev' : 'pcard'}>
-              <div className="pstage" style={{ background: p.bg }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={p.image}
-                  alt={p.imageAlt}
-                  loading="lazy"
-                  className={p.imageFit === 'logo' ? 'logo-fit' : 'cover'}
-                />
-                <span className="pcat">{p.category}</span>
-                {p.inDevelopment && (
-                  <span className="pdev">
-                    <span className="devdot" />
-                    In development
-                  </span>
-                )}
-              </div>
-              <div className="pbody">
-                <span className="kind">{p.kind}</span>
-                <h3 className="orb">{p.title}</h3>
-                <p>{p.desc}</p>
-                <div className="pfoot">
-                  <div className="tags">
-                    {p.tags.map((t) => (
-                      <Tag key={t.name} tag={t} />
-                    ))}
-                  </div>
-                  {p.inDevelopment ? (
-                    <span className="plink gtext">Launching soon</span>
-                  ) : p.live ? (
-                    <a href={p.live} target="_blank" rel="noopener" className="plink">
-                      Live ↗
-                    </a>
-                  ) : null}
-                </div>
-              </div>
-            </article>
-          ))}
         </div>
       </div>
     </section>
