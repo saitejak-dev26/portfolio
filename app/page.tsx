@@ -15,8 +15,11 @@ export default function Home() {
 
   return (
     <>
+      <a href="#top" className="skip">
+        Skip to content
+      </a>
       <Nav />
-      <main id="top">
+      <main id="top" tabIndex={-1}>
         <Hero />
         <About />
         <Skills />

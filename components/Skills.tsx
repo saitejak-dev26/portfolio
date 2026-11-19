@@ -13,7 +13,7 @@ export default function Skills() {
             <div key={g.title} className="card skill-card reveal">
               <div className="skill-head">
                 <span className="ico">
-                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#262626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d={g.icon} />
                   </svg>
                 </span>

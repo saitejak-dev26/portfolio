@@ -17,11 +17,20 @@ export default function ContactForm() {
   const [form, setForm] = useState({ name: '', email: '', topic: TOPICS[0], message: '', company: '' });
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState('');
+  // Which field the current error belongs to, so it can be announced and linked to that input.
+  const [errorField, setErrorField] = useState<'name' | 'email' | 'message' | null>(null);
   const [usedMailto, setUsedMailto] = useState(false);
 
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => {
     setForm((f) => ({ ...f, [k]: e.target.value }));
     setError('');
+    setErrorField(null);
+  };
+
+  const fail = (field: 'name' | 'email' | 'message', msg: string) => {
+    setErrorField(field);
+    setError(msg);
+    document.getElementById(`cf-${field === 'message' ? 'msg' : field}`)?.focus();
   };
 
   function openMailto() {
@@ -34,9 +43,9 @@ export default function ContactForm() {
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!form.name.trim()) return setError('Please add your name.');
-    if (!EMAIL_RE.test(form.email.trim())) return setError('Please enter a valid email address.');
-    if (form.message.trim().length < 10) return setError('Please write a short message (at least 10 characters).');
+    if (!form.name.trim()) return fail('name', 'Please add your name.');
+    if (!EMAIL_RE.test(form.email.trim())) return fail('email', 'Please enter a valid email address.');
+    if (form.message.trim().length < 10) return fail('message', 'Please write a short message (at least 10 characters).');
 
     setStatus('sending');
     try {
@@ -78,12 +87,16 @@ export default function ContactForm() {
 
       <div className="form-row">
         <div className="field">
-          <label htmlFor="cf-name">Your name</label>
-          <input id="cf-name" className="fin" type="text" autoComplete="name" placeholder="Jane Doe" value={form.name} onChange={set('name')} />
+          <label htmlFor="cf-name">
+            Your name <span aria-hidden="true" className="req">*</span>
+          </label>
+          <input id="cf-name" className="fin" aria-required="true" aria-invalid={errorField === 'name'} aria-describedby={errorField === 'name' ? 'cf-error' : undefined} type="text" autoComplete="name" placeholder="Jane Doe" value={form.name} onChange={set('name')} />
         </div>
         <div className="field">
-          <label htmlFor="cf-email">Your email</label>
-          <input id="cf-email" className="fin" type="email" autoComplete="email" placeholder="jane@company.com" value={form.email} onChange={set('email')} />
+          <label htmlFor="cf-email">
+            Your email <span aria-hidden="true" className="req">*</span>
+          </label>
+          <input id="cf-email" className="fin" aria-required="true" aria-invalid={errorField === 'email'} aria-describedby={errorField === 'email' ? 'cf-error' : undefined} type="email" autoComplete="email" placeholder="jane@company.com" value={form.email} onChange={set('email')} />
         </div>
       </div>
 
@@ -99,12 +112,14 @@ export default function ContactForm() {
       </div>
 
       <div className="field">
-        <label htmlFor="cf-msg">Message</label>
-        <textarea id="cf-msg" className="fin" rows={5} placeholder="Tell me a little about the role or project…" value={form.message} onChange={set('message')} />
+        <label htmlFor="cf-msg">
+          Message <span aria-hidden="true" className="req">*</span>
+        </label>
+        <textarea id="cf-msg" className="fin" aria-required="true" aria-invalid={errorField === 'message'} aria-describedby={errorField === 'message' ? 'cf-error' : undefined} rows={5} placeholder="Tell me a little about the role or project…" value={form.message} onChange={set('message')} />
       </div>
 
       {error && (
-        <span role="alert" className="form-error">
+        <span id="cf-error" role="alert" className="form-error">
           {error}
         </span>
       )}
@@ -115,6 +130,10 @@ export default function ContactForm() {
           <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
         </svg>
       </button>
+
+      <p className="form-note">
+        Your details are only used to reply to you — never shared, no tracking, no newsletters.
+      </p>
 
       {status === 'sent' && (
         <span role="status" className="form-ok">

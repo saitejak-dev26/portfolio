@@ -245,6 +245,7 @@ export const experience = {
     {
       title: 'Muzigal Academy CRM',
       sub: 'Core platform',
+      featured: true, // shown as the tall lead card in Experience → Projects
       points: [
         'Developed and maintained the Muzigal Academy CRM using JavaScript, jQuery, HTML and MySQL within an MVC architecture.',
         'Implemented CRM user-interface interactions and form workflows using JavaScript and jQuery, with HTML-based page structure.',

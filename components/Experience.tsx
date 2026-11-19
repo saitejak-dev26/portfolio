@@ -61,20 +61,28 @@ export default function Experience() {
 
           <div className="exp-block">
             <h4 className="orb">Projects at Muzigal</h4>
+            {/* Bento: the featured project is a tall lead card, the rest fill a 2×2 grid beside it. */}
             <div className="subprojects">
-              {e.projects.map((p) => (
-                <div key={p.title} className="card subproject">
-                  <div>
-                    <div className="orb">{p.title}</div>
-                    <small>{p.sub}</small>
+              {e.projects.map((p, i) => {
+                const featured = 'featured' in p && p.featured;
+                return (
+                  <div key={p.title} className={featured ? 'subproject featured' : 'subproject'}>
+                    <div className="sp-head">
+                      <span className="sp-num orb">{String(i + 1).padStart(2, '0')}</span>
+                      {featured && <span className="sp-badge">Flagship</span>}
+                    </div>
+                    <div className="sp-title">
+                      <h5 className="orb">{p.title}</h5>
+                      <small>{p.sub}</small>
+                    </div>
+                    <ul className="sp-points">
+                      {p.points.map((pt) => (
+                        <li key={pt.slice(0, 40)}>{rich(pt)}</li>
+                      ))}
+                    </ul>
                   </div>
-                  <ul>
-                    {p.points.map((pt) => (
-                      <li key={pt.slice(0, 40)}>{pt}</li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
