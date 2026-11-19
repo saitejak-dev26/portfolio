@@ -13,6 +13,10 @@ const TO_EMAIL   = 'careers.saitejak@gmail.com';
 const FROM_EMAIL = 'no-reply@saitejak.dev';   // ← change to a mailbox on your Hostinger domain
 const FROM_NAME  = 'Portfolio Contact Form';
 const MIN_SECONDS_BETWEEN_SENDS = 30;           // simple per-visitor rate limit
+const SEND_THANK_YOU = true;                    // email the visitor a confirmation
+
+define('CONTACT_MAILER', true);
+require __DIR__ . '/contact-mail.php';
 
 // ── Response helpers ────────────────────────────────────────
 header('Content-Type: application/json; charset=utf-8');
@@ -80,29 +84,24 @@ if (is_file($lock) && (time() - (int)@filemtime($lock)) < MIN_SECONDS_BETWEEN_SE
 }
 
 // ── Send ────────────────────────────────────────────────────
-$subject = '=?UTF-8?B?' . base64_encode("[Portfolio] {$topic} — {$name}") . '?=';
-$body = "New message from your portfolio\n"
-      . "--------------------------------\n"
-      . "Name:  {$name}\n"
-      . "Email: {$email}\n"
-      . "Topic: {$topic}\n\n"
-      . $message . "\n\n"
-      . "--------------------------------\n"
-      . 'Sent: ' . gmdate('Y-m-d H:i') . " UTC · IP: {$ip}\n";
-
-$headers = [
-    'MIME-Version: 1.0',
-    'Content-Type: text/plain; charset=UTF-8',
-    'From: ' . FROM_NAME . ' <' . FROM_EMAIL . '>',
-    'Reply-To: ' . $name . ' <' . $email . '>',
-    'X-Mailer: PHP/' . phpversion(),
-];
-
-$sent = @mail(TO_EMAIL, $subject, $body, implode("\r\n", $headers), '-f' . FROM_EMAIL);
+// 1) The form response to you (Reply-To is the visitor, so "Reply" answers them).
+$sent = send_mail(
+    TO_EMAIL,
+    mail_owner_notification($name, $email, $topic, $message, $ip),
+    mb_encode_mimeheader($name, 'UTF-8') . ' <' . $email . '>',
+    FROM_NAME
+);
 
 if (!$sent) {
     respond(500, ['ok' => false, 'error' => 'Sorry, the message could not be sent. Please email ' . TO_EMAIL . ' directly.']);
 }
 
 @touch($lock);
+
+// 2) Thank-you to the visitor (Reply-To is you). Only after your copy went out,
+//    and a failure here never fails the form for the visitor.
+if (SEND_THANK_YOU) {
+    send_mail($email, mail_thank_you($name, $topic), TO_EMAIL, 'Saiteja Kondakindi');
+}
+
 respond(200, ['ok' => true]);
