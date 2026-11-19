@@ -1,44 +1,71 @@
-import type { Metadata, Viewport } from 'next';
-import { site } from '@/data/site';
+import type { Metadata, Viewport } from "next";
+import { site } from "@/data/site";
 
 // Self-hosted fonts (bundled at build time — no request to Google at runtime).
-import '@fontsource/orbitron/500.css';
-import '@fontsource/orbitron/700.css';
-import '@fontsource/orbitron/800.css';
-import '@fontsource/orbitron/900.css';
-import '@fontsource/outfit/300.css';
-import '@fontsource/outfit/400.css';
-import '@fontsource/outfit/500.css';
-import '@fontsource/outfit/600.css';
-import '@fontsource/outfit/700.css';
-import '@fontsource/outfit/800.css';
-import './globals.css';
+import "@fontsource/orbitron/500.css";
+import "@fontsource/orbitron/700.css";
+import "@fontsource/orbitron/800.css";
+import "@fontsource/orbitron/900.css";
+import "@fontsource/outfit/300.css";
+import "@fontsource/outfit/400.css";
+import "@fontsource/outfit/500.css";
+import "@fontsource/outfit/600.css";
+import "@fontsource/outfit/700.css";
+import "@fontsource/outfit/800.css";
+import "./globals.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: `${site.name} — ${site.role}`,
   description: site.description,
   authors: [{ name: site.name }],
-  keywords: ['Full Stack Developer', 'Next.js', 'React', 'Node.js', 'NestJS', 'MySQL', 'SaaS', 'CRM', 'Hyderabad'],
-  alternates: { canonical: '/' },
+  keywords: [
+    "Full Stack Developer",
+    "Next.js",
+    "React",
+    "Node.js",
+    "NestJS",
+    "MySQL",
+    "SaaS",
+    "CRM",
+    "Hyderabad",
+  ],
+  alternates: { canonical: "/" },
   openGraph: {
-    type: 'website',
+    type: "website",
     url: site.url,
     title: `${site.name} — ${site.role}`,
     description: site.description,
     siteName: site.name,
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: `${site.name} — ${site.role}`,
+      },
+    ],
   },
-  twitter: { card: 'summary', title: `${site.name} — ${site.role}`, description: site.description },
-  icons: { icon: '/favicon.svg' },
+  twitter: {
+    card: "summary_large_image",
+    title: `${site.name} — ${site.role}`,
+    description: site.description,
+    images: ["/og.png"],
+  },
+  icons: { icon: "/favicon.svg" },
 };
 
 export const viewport: Viewport = {
-  themeColor: '#0F0F14',
-  width: 'device-width',
+  themeColor: "#0F0F14",
+  width: "device-width",
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
       <body>{children}</body>
