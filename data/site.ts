@@ -12,6 +12,8 @@ export const site = {
   github: 'https://github.com/saitejak-dev26',
   linkedin: 'https://www.linkedin.com/in/saiteja-kondakindi-4475953ab/',
   resume: '/resume/Saiteja_Kondakindi_Resume.pdf',
+  // Portrait (880×1100, 4:5). The .webp is served first, the .jpg is the fallback.
+  photo: { webp: '/images/profile/saiteja.webp', jpg: '/images/profile/saiteja.jpg', width: 880, height: 1100 },
   // Change this to your real domain once it is connected on Hostinger.
   url: 'https://saitejak.dev',
   description:

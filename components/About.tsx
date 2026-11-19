@@ -1,3 +1,4 @@
+import { site } from '@/data/site';
 import SectionTitle from './SectionTitle';
 
 export default function About() {
@@ -6,6 +7,31 @@ export default function About() {
       <SectionTitle ghost="About" title="Who I am" />
       <div className="about-grid">
         <div className="about-lead reveal">
+          <figure className="portrait">
+            <span aria-hidden="true" className="portrait-glow gbg" />
+            <div className="portrait-frame">
+              <picture>
+                <source srcSet={site.photo.webp} type="image/webp" />
+                <img
+                  src={site.photo.jpg}
+                  width={site.photo.width}
+                  height={site.photo.height}
+                  alt={`Portrait of ${site.name}, ${site.role}`}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </picture>
+            </div>
+            <figcaption className="portrait-tag">
+              <span className="dot" aria-hidden="true" />
+              <span>
+                <b>{site.name}</b>
+                <small>
+                  {site.role} · {site.stats[0].value} years
+                </small>
+              </span>
+            </figcaption>
+          </figure>
           <span className="orb">
             Logic, consistency
             <br />
