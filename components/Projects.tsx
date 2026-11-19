@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Project } from '@/data/site';
 import type { Tag as TagT } from '@/lib/icons';
 import SectionTitle from './SectionTitle';
@@ -17,28 +17,63 @@ const FILTERS: Filter[] = [
   { label: 'In development', color: '#F59E0B', test: (p) => !!p.inDevelopment },
 ];
 
+const MAX_TAGS = 4;
 const pad = (x: number) => String(x).padStart(2, '0');
 
 function Arrow({ dir }: { dir: 'prev' | 'next' }) {
   return (
-    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
       <path d={dir === 'prev' ? 'M19 12H5M11 6l-6 6 6 6' : 'M5 12h14M13 6l6 6-6 6'} />
     </svg>
   );
 }
 
-function Shot({ p, className }: { p: ProjectView; className: string }) {
+function ProjectCard({ p, num }: { p: ProjectView; num: string }) {
+  const extra = p.tags.length - MAX_TAGS;
   return (
-    <div className={className} style={{ background: p.bg }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={p.image} alt={p.imageAlt} loading="lazy" className={p.imageFit === 'logo' ? 'logo-fit' : 'cover'} />
-    </div>
+    <article className="pcard">
+      <div className="pc-shot" style={{ background: p.bg }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={p.image} alt={p.imageAlt} loading="lazy" className={p.imageFit === 'logo' ? 'logo-fit' : 'cover'} />
+        <span className={p.inDevelopment ? 'pc-status building' : 'pc-status'}>
+          <span className="devdot" />
+          {p.inDevelopment ? 'In development' : 'Live'}
+        </span>
+      </div>
+
+      <div className="pc-body">
+        <div className="pc-meta">
+          <span className="orb">{num}</span>
+          <span>{p.kind}</span>
+        </div>
+        <h3 className="orb">{p.title}</h3>
+        <p>{p.desc}</p>
+        <div className="tags">
+          {p.tags.slice(0, MAX_TAGS).map((t) => (
+            <Tag key={t.name} tag={t} />
+          ))}
+          {extra > 0 && <span className="tag">+{extra}</span>}
+        </div>
+        <div className="pc-foot">
+          {p.inDevelopment ? (
+            <span className="pc-link muted">Launching soon</span>
+          ) : p.live ? (
+            <a href={p.live} target="_blank" rel="noopener" className="pc-link">
+              Visit live <span aria-hidden="true">↗</span>
+            </a>
+          ) : (
+            <span className="pc-link muted">Internal project</span>
+          )}
+        </div>
+      </div>
+    </article>
   );
 }
 
 export default function Projects({ projects }: { projects: ProjectView[] }) {
   const [filter, setFilter] = useState('All');
-  const [index, setIndex] = useState(0);
+  const [pos, setPos] = useState({ index: 0, atStart: true, atEnd: false });
+  const rail = useRef<HTMLDivElement>(null);
 
   const ordered = useMemo(
     () => [...projects].sort((a, b) => Number(!!b.inDevelopment) - Number(!!a.inDevelopment)),
@@ -47,160 +82,98 @@ export default function Projects({ projects }: { projects: ProjectView[] }) {
   const active = FILTERS.find((f) => f.label === filter) ?? FILTERS[0];
   const list = ordered.filter(active.test);
   const n = list.length;
-  const off = Math.max(0, Math.min(index, n - 1));
 
-  const prev = () => setIndex(off === 0 ? n - 1 : off - 1);
-  const next = () => setIndex(off >= n - 1 ? 0 : off + 1);
+  const step = () => {
+    const el = rail.current;
+    const card = el?.firstElementChild as HTMLElement | null;
+    if (!el || !card) return 0;
+    return card.offsetWidth + parseFloat(getComputedStyle(el).columnGap || '0');
+  };
 
-  // Horizontal swipe on touch screens; ignores mostly-vertical gestures so page scroll still works.
-  const touch = useRef<{ x: number; y: number } | null>(null);
-  const onTouchStart = (e: React.TouchEvent) => {
-    const t = e.touches[0];
-    touch.current = { x: t.clientX, y: t.clientY };
-  };
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const start = touch.current;
-    touch.current = null;
-    if (!start) return;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - start.x;
-    const dy = t.clientY - start.y;
-    if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
-    if (dx < 0) next();
-    else prev();
-  };
+  const sync = useCallback(() => {
+    const el = rail.current;
+    if (!el) return;
+    const s = step();
+    const max = el.scrollWidth - el.clientWidth;
+    setPos({
+      index: s ? Math.min(n - 1, Math.round(el.scrollLeft / s)) : 0,
+      atStart: el.scrollLeft <= 4,
+      atEnd: el.scrollLeft >= max - 4,
+    });
+  }, [n]);
+
+  useEffect(() => {
+    rail.current?.scrollTo({ left: 0 });
+    sync();
+    window.addEventListener('resize', sync);
+    return () => window.removeEventListener('resize', sync);
+  }, [filter, sync]);
+
+  const go = (dir: 1 | -1) => rail.current?.scrollBy({ left: dir * step(), behavior: 'smooth' });
+
+  // How many cards are fully in view, so the progress bar reflects the visible window.
+  const visible = rail.current && step() ? Math.max(1, Math.round(rail.current.clientWidth / step())) : 1;
+  const last = Math.min(n, pos.index + visible);
 
   return (
     <section id="projects" className="section projects">
       <div className="container">
         <SectionTitle ghost="Shipped" title="Selected work" />
 
-        <div className="ptabs reveal" role="group" aria-label="Filter projects by category">
-          {FILTERS.map((f) => (
-            <button
-              key={f.label}
-              type="button"
-              className="ptab"
-              aria-pressed={f.label === active.label}
-              onClick={() => {
-                setFilter(f.label);
-                setIndex(0);
-              }}
-            >
-              {f.color && <span className="pdot" style={{ background: f.color }} />}
-              {f.label}
-              <span className="count">{ordered.filter(f.test).length}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="pband reveal">
-        <button type="button" className="arw arw-prev" aria-label="Previous project" onClick={prev}>
-          <Arrow dir="prev" />
-        </button>
-        <button type="button" className="arw arw-next" aria-label="Next project" onClick={next}>
-          <Arrow dir="next" />
-        </button>
-
-        <div className="pviewport" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-          <div className="track" style={{ transform: `translateX(calc(-${off} * (var(--pw) + var(--track-gap))))` }}>
-            {list.map((p, i) => {
-              const isActive = i === off;
-              const num = pad(i + 1);
-              return (
-                <article key={p.title} className={isActive ? 'pslide active' : 'pslide'} aria-current={isActive || undefined}>
-                  {/* Expanded detail card — shown for the active project */}
-                  <div className={p.inDevelopment ? 'pdetail dev' : 'pdetail'} inert={!isActive} aria-hidden={!isActive}>
-                    <div className="pd-head">
-                      <Shot p={p} className="pd-thumb" />
-                      <div className="pd-meta">
-                        <span>Category:</span>
-                        <b>{p.category}</b>
-                      </div>
-                      <span className={p.inDevelopment ? 'pd-status building' : 'pd-status'}>
-                        <span className="devdot" />
-                        {p.inDevelopment ? 'In development' : 'Live'}
-                      </span>
-                    </div>
-                    <div className="pd-row">
-                      <span>Type :</span>
-                      <b>{p.kind}</b>
-                    </div>
-                    <div className="pd-grid">
-                      <div>
-                        <span>Project</span>
-                        <b className="orb">
-                          {num}/{pad(n)}
-                        </b>
-                      </div>
-                      <div>
-                        <span>Stack</span>
-                        <b className="orb">{p.stack.length}</b>
-                      </div>
-                      <div className="wide">
-                        <span>Built with</span>
-                        <div className="tags">
-                          {p.tags.map((t) => (
-                            <Tag key={t.name} tag={t} />
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="pd-bottom">
-                      <div className="pd-copy">
-                        <h3 className="orb">{p.title}</h3>
-                        <p>{p.desc}</p>
-                        {p.inDevelopment ? (
-                          <span className="plink gtext">Launching soon</span>
-                        ) : p.live ? (
-                          <a href={p.live} target="_blank" rel="noopener" className="plink">
-                            Visit live ↗
-                          </a>
-                        ) : null}
-                      </div>
-                      <Shot p={p} className="pd-peek" />
-                    </div>
-                  </div>
-
-                  {/* Poster — shown for the projects waiting in line */}
-                  <button
-                    type="button"
-                    className="pposter"
-                    inert={isActive}
-                    aria-hidden={isActive}
-                    aria-label={`Show ${p.title}`}
-                    onClick={() => setIndex(i)}
-                  >
-                    {p.inDevelopment && (
-                      <span className="pp-flag" title="In development">
-                        <span className="devdot" />
-                      </span>
-                    )}
-                    <span className="pp-num orb" aria-hidden="true">
-                      {num}
-                    </span>
-                    <Shot p={p} className="pp-shot" />
-                    <span className="pp-foot">
-                      <span className="pp-kind">
-                        <span>{num}</span>
-                        {p.kind}
-                      </span>
-                      <span className="pp-title orb">{p.title}</span>
-                    </span>
-                  </button>
-                </article>
-              );
-            })}
+        <div className="phead reveal">
+          <div className="ptabs" role="group" aria-label="Filter projects by category">
+            {FILTERS.map((f) => (
+              <button
+                key={f.label}
+                type="button"
+                className="ptab"
+                aria-pressed={f.label === active.label}
+                onClick={() => setFilter(f.label)}
+              >
+                {f.color && <span className="pdot" style={{ background: f.color }} />}
+                {f.label}
+                <span className="count">{ordered.filter(f.test).length}</span>
+              </button>
+            ))}
           </div>
+          <div className="parrows">
+            <button type="button" className="arw" aria-label="Previous projects" onClick={() => go(-1)} disabled={pos.atStart}>
+              <Arrow dir="prev" />
+            </button>
+            <button type="button" className="arw" aria-label="Next projects" onClick={() => go(1)} disabled={pos.atEnd}>
+              <Arrow dir="next" />
+            </button>
+          </div>
+        </div>
+
+        <div
+          ref={rail}
+          className={`prail reveal${pos.atStart ? '' : ' fade-l'}${pos.atEnd ? '' : ' fade-r'}`}
+          onScroll={sync}
+          tabIndex={0}
+          aria-label="Projects"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight') { e.preventDefault(); go(1); }
+            if (e.key === 'ArrowLeft') { e.preventDefault(); go(-1); }
+          }}
+        >
+          {list.map((p, i) => (
+            <ProjectCard key={p.title} p={p} num={pad(i + 1)} />
+          ))}
         </div>
 
         <div className="pcontrols">
           <span className="counter orb" aria-live="polite">
-            {pad(off + 1)} / {pad(n)}
+            {pad(Math.min(n, pos.index + 1))}
+            {last > pos.index + 1 && `–${pad(last)}`} / {pad(n)}
           </span>
           <div className="progress">
-            <span style={{ width: `${((off + 1) / Math.max(n, 1)) * 100}%` }} />
+            <span
+              style={{
+                left: `${(pos.index / Math.max(n, 1)) * 100}%`,
+                width: `${((last - pos.index) / Math.max(n, 1)) * 100}%`,
+              }}
+            />
           </div>
         </div>
       </div>
